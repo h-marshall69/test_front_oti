@@ -1,115 +1,95 @@
+<!-- components/CameraCapture.vue -->
 <template>
     <div class="camera-capture">
-        <h2>Capturar Foto del DNI</h2>
-
-        <div class="camera-container">
-            <video ref="videoElement" autoplay playsinline class="camera-preview"></video>
-        </div>
+        <video ref="videoElement" autoplay class="camera-preview"></video>
+        <canvas ref="canvasElement" style="display: none;"></canvas>
 
         <div class="controls">
-            <button @click="capture" class="btn-capture">
-                📸 Capturar Foto
-            </button>
-            <button @click="$emit('back')" class="btn-back">
-                ‹ Volver
-            </button>
-        </div>
-
-        <div v-if="error" class="error-message">
-            {{ error }}
+            <button @click="startCamera" :disabled="isCameraActive">Activar Cámara</button>
+            <button @click="savePhoto" :disabled="!isCameraActive">Tomar Foto</button>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useCamera } from '../composables/useCamera'
+import { ref, onUnmounted } from 'vue'
+import { useCameraStore } from '@/stores/camera'
 
-const props = defineProps({
-    selectedCamera: {
-        type: Object,
-        required: true
-    }
-})
-
-const emit = defineEmits(['photo-captured', 'back'])
-
-const { getStream, stopStream, capturePhoto } = useCamera()
 const videoElement = ref(null)
-const error = ref('')
+const canvasElement = ref(null)
+const isCameraActive = ref(false)
+const stream = ref(null)
+
+const cameraStore = useCameraStore()
 
 const startCamera = async () => {
     try {
-        const stream = await getStream()
-        if (videoElement.value) {
-            videoElement.value.srcObject = stream
-        }
-    } catch (err) {
-        error.value = 'Error al acceder a la cámara: ' + err.message
+        stream.value = await navigator.mediaDevices.getUserMedia({
+            video: { width: 600, height: 400 }
+        })
+        videoElement.value.srcObject = stream.value
+        isCameraActive.value = true
+    } catch (error) {
+        console.error('Error al acceder a la cámara:', error)
+        alert('No se pudo acceder a la cámara')
     }
 }
 
-const capture = () => {
-    if (videoElement.value) {
-        const photoData = capturePhoto(videoElement.value)
-        emit('photo-captured', photoData)
-    }
-}
+const savePhoto = () => {
+    const context = canvasElement.value.getContext('2d')
+    canvasElement.value.width = videoElement.value.videoWidth
+    canvasElement.value.height = videoElement.value.videoHeight
+    context.drawImage(videoElement.value, 0, 0)
 
-onMounted(() => {
-    startCamera()
-})
+    cameraStore.setCapturedPhoto(canvasElement.value.toDataURL('image/jpeg'))
+}
 
 onUnmounted(() => {
-    stopStream()
+    stopCamera()
 })
 </script>
 
 <style scoped>
 .camera-capture {
-    text-align: center;
-}
-
-.camera-container {
-    margin: 20px auto;
     max-width: 600px;
+    margin: 0 auto;
 }
 
 .camera-preview {
     width: 100%;
-    max-height: 400px;
+    max-width: 640px;
+    border: 2px solid #ccc;
     border-radius: 8px;
-    background: #000;
 }
 
 .controls {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+    margin: 20px 0;
+}
+
+.controls button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.controls button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.preview {
     margin-top: 20px;
+    text-align: center;
 }
 
-.btn-capture {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 15px 30px;
-    border-radius: 50px;
-    font-size: 18px;
-    cursor: pointer;
-}
-
-.btn-back {
-    background: #666;
-    color: white;
-    border: none;
-    padding: 15px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.error-message {
-    color: #f44336;
-    margin-top: 10px;
+.preview-image {
+    max-width: 300px;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    margin: 10px 0;
 }
 </style>
