@@ -1,61 +1,53 @@
 // services/cropService.js
 import { useCameraStore } from '@/stores/camera'
+import apiClient from './api';
+import { makeFormData } from '@/abadeer_truco/utilities/FormDataMaker';
 
 export class CropService {
-  static async cropImage(imageData) {
-    const cameraStore = useCameraStore()
-    
-    try {
-      cameraStore.setLoading(true)
-      cameraStore.setError(null)
+    /**
+     * Envía una imagen al backend para ser procesada y recortada.
+     * @param {string | File | Blob} imageData - La imagen a procesar (preferiblemente como File o Blob).
+     * @param {string} dni - El DNI asociado a la imagen.
+     * @param {string[]} [codes] - Códigos opcionales para la petición.
+     * @returns {Promise<any>} La respuesta de la API.
+     */
+    static async cropImage(imageData, dni, codes = ["00000000-0000-0000-0000-000000000000"]) {
+        const cameraStore = useCameraStore();
 
-      // Simular llamada a API - reemplaza con tu endpoint real
-      const response = await this.mockCropApiCall(imageData)
-      
-      cameraStore.setCroppedPhoto(response.croppedImageUrl)
-      return response
-      
-    } catch (error) {
-      cameraStore.setError('Error al procesar la imagen: ' + error.message)
-      throw error
-    } finally {
-      cameraStore.setLoading(false)
-    }
-  }
+        try {
+            cameraStore.setLoading(true)
+            cameraStore.setError(null)
 
-  // Mock de la API - reemplaza con tu implementación real
-  static async mockCropApiCall(imageData) {
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // En una implementación real, aquí enviarías la imagen a tu API
-    // Por ejemplo:
-    // const formData = new FormData();
-    // formData.append('image', this.dataURLtoBlob(imageData));
-    // const response = await fetch('https://tu-api.com/crop', {
-    //   method: 'POST',
-    //   body: formData
-    // });
-    
-    // Simular respuesta exitosa
-    return {
-      success: true,
-      croppedImageUrl: `https://picsum.photos/400/300?random=${Math.random()}`,
-      message: 'Imagen recortada exitosamente'
-    }
-  }
+            const formData = makeFormData({
+                imageString: imageData,
+                dni: dni,
+                codes: codes
+            });
 
-  // Utilidad para convertir DataURL a Blob (para enviar a API real)
-  static dataURLtoBlob(dataURL) {
-    const byteString = atob(dataURL.split(',')[1])
-    const mimeString = dataURL.split(',')[0].split(':')[1].split(';')[0]
-    const ab = new ArrayBuffer(byteString.length)
-    const ia = new Uint8Array(ab)
-    
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i)
+            // const response = await apiClient.post('/tomar_photo', formData,);
+
+            // return response.data;
+
+            return {
+                success: true,
+                imageUrl: `https://picsum.photos/400/300?random=${Math.random()}`,
+                message: 'Imagen recortada exitosamente'
+            }
+
+        } catch (error) {
+            let errorMessage = 'Ocurrió un error inesperado.';
+            if (error.response && error.response.data && error.response.data.message) {
+                // Si el backend envía un JSON con una propiedad 'message'
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                // Si no, usamos el mensaje de error genérico
+                errorMessage = error.message;
+            }
+            cameraStore.setError('Error al procesar la imagen: ' + errorMessage);
+            throw error;
+        } finally {
+            cameraStore.setLoading(false)
+        }
     }
-    
-    return new Blob([ab], { type: mimeString })
-  }
+
 }

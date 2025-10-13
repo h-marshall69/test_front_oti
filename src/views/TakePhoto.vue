@@ -5,7 +5,7 @@
         <div class="container">
             <div class="component-section">
                 <h2>Tomar Foto</h2>
-                <CameraCapture />
+                <TakePhoto />
             </div>
 
             <div class="component-section">
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import CameraCapture from '@/components/CameraCapture.vue';
+import TakePhoto from '@/components/TakePhoto.vue';
 import RecentPhotos from '@/components/RecentPhotos.vue';
 import Photo from '@/components/Photo.vue';
 </script>

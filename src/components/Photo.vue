@@ -1,10 +1,10 @@
 <template>
     <div class="container">
         <div class="component-section">
-            <PhotoDisplay />
+            <PhotoTaken />
         </div>
         <div class="component-section">
-            <ImageCropper />
+            <CroppedPhoto />
         </div>
 
 
@@ -13,8 +13,8 @@
 </template>
 
 <script setup>
-import PhotoDisplay from './PhotoDisplay.vue';
-import ImageCropper from './ImageCropper.vue';
+import PhotoTaken from '../components/PhotoTaken.vue';
+import CroppedPhoto from '@/components/CroppedPhoto.vue';
 </script>
 
 <style scoped>

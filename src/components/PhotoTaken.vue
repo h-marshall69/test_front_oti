@@ -37,8 +37,7 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia'
 import { useCameraStore } from '@/stores/camera';
-import axios from 'axios';
-import { makeFormData } from '@/abadeer_truco/utilities/FormDataMaker';
+import { CropService } from '@/services/CropService'; 
 
 // Importación de componentes de PrimeVue
 import InputText from 'primevue/inputtext';
@@ -65,23 +64,6 @@ function formatDniInput() {
 }
 
 /**
- * Convierte una imagen en formato base64 a un objeto Blob.
- * @param {string} base64String - La imagen en formato base64.
- * @returns {Blob}
- */
-function base64ToBlob(base64String) {
-    const parts = base64String.split(';base64,');
-    const contentType = parts[0].split(':')[1];
-    const raw = window.atob(parts[1]);
-    const rawLength = raw.length;
-    const uInt8Array = new Uint8Array(rawLength);
-    for (let i = 0; i < rawLength; ++i) {
-        uInt8Array[i] = raw.charCodeAt(i);
-    }
-    return new Blob([uInt8Array], { type: contentType });
-}
-
-/**
 * Sube la foto y los datos al servidor.
 */
 async function uploadPhoto() {
@@ -95,29 +77,12 @@ async function uploadPhoto() {
 
 
     try {
-        // const formData = new FormData();
-        // const imageBlob = base64ToBlob(cameraStore.capturedPhoto);
 
-        // formData.append('dni', dni.value);
-        // formData.append('image', imageBlob, `photo_${dni.value}.jpg`);
-        // const codes = ["00000000-0000-0000-0000-000000000000"];
-        // codes.forEach(code => formData.append('codes[]', code));
+        const response = await CropService.cropImage(cameraStore.capturedPhoto, dni.value);
 
-        const formData = makeFormData({
-            imageString: cameraStore.capturedPhoto,
-            dni: dni.value,
-            codes: ["00000000-0000-0000-0000-000000000000"]
-        });
-
-        const response = await axios.post("http://localhost:8000/api/tomar_fotos", formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-        });
-
-        console.log("Respuesta del servidor:", response.data);
-        // cameraStore.clearPhoto(); // Limpia la foto de la store
-        // cameraStore.setCapturedPhoto(response.data.imageUrl);
-        cameraStore.setCroppedPhoto(response.data.imageUrl);
-        dni.value = ""; // Limpia el DNI
+        console.log("Respuesta del servidor:", response);
+        cameraStore.setCroppedPhoto(response.imageUrl);
+        dni.value = "";
 
     } catch (err) {
         console.error("Error al subir la foto:", err);

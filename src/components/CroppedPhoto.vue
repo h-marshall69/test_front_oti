@@ -33,7 +33,8 @@ const fullImageUrl = computed(() => {
     // Si hay una URL en el store, construye la ruta completa
     if (croppedPhotoUrl.value) {
         console.log(croppedPhotoUrl)
-        return `http://localhost:8000/${croppedPhotoUrl.value}`;
+        // return `http://localhost:8000/${croppedPhotoUrl.value}`;
+        return croppedPhotoUrl.value;
     }
     // Si no, devuelve null para que la imagen no se muestre
     return null;

@@ -38,14 +38,7 @@
             <div class="modal-content" @click.stop>
                 <button class="modal-close" @click="closeModal">×</button>
                 <img :src="selectedPhoto.url" :alt="`Foto ${selectedPhoto.date}`" class="modal-image" />
-                <div class="modal-actions">
-                    <button @click="downloadPhoto(selectedPhoto)" class="modal-download-btn">
-                        ⬇️ Descargar
-                    </button>
-                    <button @click="deletePhoto(selectedPhoto.id)" class="modal-delete-btn">
-                        🗑️ Eliminar
-                    </button>
-                </div>
+
                 <div class="modal-info">
                     <div>Fecha: {{ formatDate(selectedPhoto.timestamp) }}</div>
                     <div>Hora: {{ selectedPhoto.time }}</div>
@@ -367,14 +360,6 @@ onMounted(() => {
     padding: 40px;
 }
 
-.modal-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    padding: 20px;
-    border-top: 1px solid #e9ecef;
-}
-
 .modal-download-btn {
     padding: 10px 20px;
     background: #28a745;
@@ -440,11 +425,6 @@ onMounted(() => {
 
     .modal-image {
         padding: 20px;
-    }
-
-    .modal-actions {
-        flex-direction: column;
-        align-items: center;
     }
 }
 
