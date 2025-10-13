@@ -13,7 +13,7 @@
                 <Photo />
             </div>
 
-            <div class="sidebar">
+            <div class="component">
                 <!-- <div class="component-section recent-section"> -->
                 <RecentPhotos />
                 <!-- </div> -->
@@ -36,9 +36,10 @@ import Photo from '@/components/Photo.vue';
 
 .container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    margin-top: 30px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    max-width: 100vw;
+    width: 100%;
 }
 
 .component-section {

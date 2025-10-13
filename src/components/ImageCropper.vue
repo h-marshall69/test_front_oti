@@ -2,31 +2,15 @@
 <template>
     <div class="image-cropper">
 
-        <div v-if="capturedPhoto && !croppedPhotoUrl" class="cropper-container">
-            <div class="image-preview">
-                <img :src="capturedPhoto" alt="Imagen a recortar" class="original-image">
-                <div class="crop-overlay">
-                    <div class="crop-area"></div>
-                </div>
-            </div>
-
-            <button @click="cropImage" :disabled="isLoading" class="crop-btn">
-                <span v-if="isLoading">Procesando...</span>
-                <span v-else>Recortar Imagen</span>
-            </button>
-        </div>
-
-        <div v-else-if="croppedPhotoUrl" class="cropped-result">
-            <h3>Imagen Recortada</h3>
-            <img :src="croppedPhotoUrl" alt="Imagen recortada" class="cropped-image">
-            <div class="result-actions">
-                <button @click="downloadCropped" class="download-btn">Descargar</button>
-                <button @click="resetCrop" class="reset-btn">Recortar Otra</button>
-            </div>
+        <div v-if="croppedPhotoUrl" class="cropped-result">
+            <img :src="fullImageUrl" alt="Imagen recortada" class="cropped-image">
+            <!-- <img :src="cameraStore.capturedPhoto" alt="Imagen recortada" class="cropped-image"> -->
+            <span v-if="isLoading">Procesando...</span>
         </div>
 
         <div v-else class="no-image">
-            <p>No hay imagen para recortar</p>
+            <div class="empty-icon">📷</div>
+            <h3>No hay imagen recortada</h3>
             <p class="hint">Toma una foto primero para habilitar el recorte</p>
         </div>
 
@@ -37,6 +21,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCameraStore } from '@/stores/camera'
 import { CropService } from '@/services/cropService'
@@ -44,70 +29,37 @@ import { CropService } from '@/services/cropService'
 const cameraStore = useCameraStore()
 const { capturedPhoto, croppedPhotoUrl, isLoading, error } = storeToRefs(cameraStore)
 
-const cropImage = async () => {
-    try {
-        await CropService.cropImage(capturedPhoto.value)
-    } catch (err) {
-        console.error('Error en el recorte:', err)
-    }
-}
-
-const downloadCropped = () => {
+const fullImageUrl = computed(() => {
+    // Si hay una URL en el store, construye la ruta completa
     if (croppedPhotoUrl.value) {
-        const link = document.createElement('a')
-        link.href = croppedPhotoUrl.value
-        link.download = 'imagen-recortada.jpg'
-        link.click()
+        console.log(croppedPhotoUrl)
+        return `http://localhost:8000/${croppedPhotoUrl.value}`;
     }
-}
+    // Si no, devuelve null para que la imagen no se muestre
+    return null;
+});
 
-const resetCrop = () => {
-    cameraStore.setCroppedPhoto(null)
-}
+
 </script>
 
 <style scoped>
 .image-cropper {
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 24px;
-    background: white;
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
 }
 
 .cropper-container {
     text-align: center;
 }
 
-.image-preview {
-    position: relative;
-    display: inline-block;
-    margin: 20px 0;
-}
-
 .original-image {
     max-width: 100%;
-    max-height: 400px;
+    height: auto;
+    border: 2px solid #28a745;
     border-radius: 8px;
-}
-
-.crop-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.3);
-}
-
-.crop-area {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;
-    height: 200px;
-    border: 2px solid #007bff;
-    background: transparent;
+    display: block;
+    margin: 0 auto;
 }
 
 .crop-btn {
@@ -132,10 +84,10 @@ const resetCrop = () => {
 
 .cropped-image {
     max-width: 100%;
-    max-height: 400px;
+    height: auto;
     border: 2px solid #28a745;
-    border-radius: 8px;
-    margin: 20px 0;
+    display: block;
+    margin: 0 auto;
 }
 
 .result-actions {
@@ -168,6 +120,12 @@ const resetCrop = () => {
     background: #f8f9fa;
     border-radius: 8px;
     color: #6c757d;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
 }
 
 .hint {

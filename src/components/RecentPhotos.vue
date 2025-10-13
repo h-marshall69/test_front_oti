@@ -4,11 +4,7 @@
         <div class="recent-header">
             <h2>Fotos Recortadas Recientes</h2>
             <div class="header-actions">
-                <span class="photo-count">{{ recentPhotos.length }} fotos</span>
-                <button v-if="recentPhotos.length > 0" @click="clearAllPhotos" class="clear-all-btn"
-                    title="Eliminar todas las fotos">
-                    🗑️ Limpiar Todo
-                </button>
+
             </div>
         </div>
 
@@ -26,9 +22,6 @@
                         <button @click.stop="downloadPhoto(photo)" class="action-btn download-btn"
                             title="Descargar foto">
                             ⬇️
-                        </button>
-                        <button @click.stop="deletePhoto(photo.id)" class="action-btn delete-btn" title="Eliminar foto">
-                            🗑️
                         </button>
                     </div>
                 </div>
