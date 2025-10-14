@@ -24,7 +24,6 @@
 <script setup>
 import { ref, onUnmounted, onMounted } from 'vue'
 import { useCameraStore } from '@/stores/camera'
-import { CropService } from '@/services/cropService';
 
 // Componentes PrimeVue
 import Message from 'primevue/message';

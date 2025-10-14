@@ -3,19 +3,13 @@
     <div class="image-cropper">
 
         <div v-if="croppedPhotoUrl" class="cropped-result">
-            <img :src="fullImageUrl" alt="Imagen recortada" class="cropped-image">
-            <!-- <img :src="cameraStore.capturedPhoto" alt="Imagen recortada" class="cropped-image"> -->
-            <span v-if="isLoading">Procesando...</span>
+            <img :src="fullImageUrl" alt="Foto recortada" class="cropped-image">
         </div>
 
         <div v-else class="no-image">
-            <div class="empty-icon">📷</div>
-            <h3>No hay imagen recortada</h3>
-            <p class="hint">Toma una foto primero para habilitar el recorte</p>
-        </div>
-
-        <div v-if="error" class="error-message">
-            {{ error }}
+            <div class="empty-icon">🖼️</div>
+            <h3>No hay Foto recortada</h3>
+            <p>Toma una foto primero para ver el recorte</p>
         </div>
     </div>
 </template>
@@ -24,19 +18,15 @@
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCameraStore } from '@/stores/camera'
-import { CropService } from '@/services/cropService'
 
 const cameraStore = useCameraStore()
 const { capturedPhoto, croppedPhotoUrl, isLoading, error } = storeToRefs(cameraStore)
 
 const fullImageUrl = computed(() => {
-    // Si hay una URL en el store, construye la ruta completa
     if (croppedPhotoUrl.value) {
         console.log(croppedPhotoUrl)
-        // return `http://localhost:8000/${croppedPhotoUrl.value}`;
         return croppedPhotoUrl.value;
     }
-    // Si no, devuelve null para que la imagen no se muestre
     return null;
 });
 

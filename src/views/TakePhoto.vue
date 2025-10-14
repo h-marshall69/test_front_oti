@@ -26,6 +26,7 @@
 import TakePhoto from '@/components/TakePhoto.vue';
 import RecentPhotos from '@/components/RecentPhotos.vue';
 import Photo from '@/components/Photo.vue';
+import Test from '@/components/Test.vue';
 </script>
 
 <style scoped>

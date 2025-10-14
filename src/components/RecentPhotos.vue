@@ -9,7 +9,7 @@
         </div>
 
         <div v-if="recentPhotos.length === 0" class="empty-state">
-            <div class="empty-icon">📷</div>
+            <div class="empty-icon">🗂️</div>
             <h3>No hay fotos recortadas</h3>
             <p>Toma y recorta una foto para verla aquí</p>
         </div>

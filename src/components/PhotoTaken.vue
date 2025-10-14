@@ -22,7 +22,10 @@
             <Button @click="uploadPhoto" :disabled="!isValidDni || loading" label="Subir Foto" icon="pi pi-upload"
                 class="w-full justify-center p-button-lg" :loading="loading" />
 
-            <Message v-if="error" severity="error" :closable="false">{{ error }}</Message>
+            <Message v-if="error" severity="error" :closable="false" class="error-message">{{ error }}</Message>
+            <Message v-if="successMessage" severity="success" :closable="false" class="success-message">
+                {{ successMessage }}
+            </Message>
         </div>
 
         <div v-else class="text-center">
@@ -37,7 +40,8 @@
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia'
 import { useCameraStore } from '@/stores/camera';
-import { CropService } from '@/services/CropService'; 
+import { PhotoService } from '@/services/photoService';
+import { makeFormData } from '@/abadeer_truco/utilities/FormDataMaker';
 
 // Importación de componentes de PrimeVue
 import InputText from 'primevue/inputtext';
@@ -48,9 +52,15 @@ import Message from 'primevue/message';
 const dni = ref("");
 const loading = ref(false);
 const error = ref('');
+const successMessage = ref('');
 const cameraStore = useCameraStore();
 
 const { capturedPhoto } = storeToRefs(cameraStore)
+
+// Variable para almacenar la función de cancelación
+let cancelRequest = null;
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // --- Propiedades Computadas ---
 const isValidDni = computed(() => /^\d{8}$/.test(dni.value));
@@ -74,14 +84,25 @@ async function uploadPhoto() {
 
     loading.value = true;
     error.value = '';
+    successMessage.value = '';
 
 
     try {
 
-        const response = await CropService.cropImage(cameraStore.capturedPhoto, dni.value);
+        const formData = makeFormData({
+            imageString: cameraStore.capturedPhoto,
+            dni: dni.value,
+            codes: ["00000000-0000-0000-0000-000000000000"]
+        });
 
-        console.log("Respuesta del servidor:", response);
-        cameraStore.setCroppedPhoto(response.imageUrl);
+        const response = await PhotoService.uploadPhoto(formData);
+
+        // console.log("Respuesta del servidor:", response);
+        // cameraStore.setCroppedPhoto(response.imageUrl);
+        console.log(response.data.imageUrl)
+        cameraStore.setCroppedPhoto(BASE_URL + response.data.imageUrl);
+
+        successMessage.value = response.message;
         dni.value = "";
 
     } catch (err) {
@@ -121,5 +142,24 @@ async function uploadPhoto() {
     font-size: 64px;
     margin-bottom: 16px;
     opacity: 0.5;
+}
+
+.error-message {
+    background-color: var(--error-bg, #f8d7da);
+    color: var(--error-text, #721c24);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    margin-top: 1rem;
+    border: 1px solid var(--error-border, #f5c6cb);
+    font-size: 0.875rem;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border: 1px solid #c3e6cb;
 }
 </style>
