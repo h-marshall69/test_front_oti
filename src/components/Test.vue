@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { SelectorDates } from '@/services/selectorDates';
+import { SelectorDates } from '../services/selectorDates';
 import { ref } from 'vue';
 
 const responseData = ref(null);

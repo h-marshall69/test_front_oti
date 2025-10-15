@@ -4,7 +4,7 @@
         <div class="recent-header">
             <h2>Fotos Recortadas Recientes</h2>
             <div class="header-actions">
-
+                <div class="photo-count">{{ photosCount }} fotos</div>
             </div>
         </div>
 
@@ -15,20 +15,16 @@
         </div>
 
         <div v-else class="photos-grid">
-            <div v-for="photo in recentPhotos" :key="photo.id" class="photo-card" @click="selectPhoto(photo)">
+            <div v-for="(photo, index) in recentPhotos" :key="index" class="photo-card"
+                @click="selectPhoto(photo, index)">
                 <div class="photo-image-container">
-                    <img :src="photo.url" :alt="`Foto recortada ${photo.date}`" class="photo-image" loading="lazy" />
-                    <div class="photo-overlay">
-                        <button @click.stop="downloadPhoto(photo)" class="action-btn download-btn"
-                            title="Descargar foto">
-                            ⬇️
-                        </button>
-                    </div>
+                    <img :src="photo.imageUrl" :alt="`Foto de ${photo.nombre}`" class="photo-image" loading="lazy" />
                 </div>
 
                 <div class="photo-info">
+                    <div class="photo-name">{{ photo.nombre }}</div>
+                    <div class="photo-dni">DNI: {{ photo.dni }}</div>
                     <div class="photo-date">{{ formatDate(photo.timestamp) }}</div>
-                    <div class="photo-time">{{ photo.time }}</div>
                 </div>
             </div>
         </div>
@@ -37,11 +33,13 @@
         <div v-if="selectedPhoto" class="photo-modal" @click="closeModal">
             <div class="modal-content" @click.stop>
                 <button class="modal-close" @click="closeModal">×</button>
-                <img :src="selectedPhoto.url" :alt="`Foto ${selectedPhoto.date}`" class="modal-image" />
+                <img :src="selectedPhoto.imageUrl" :alt="`Foto de ${selectedPhoto.nombre}`" class="modal-image" />
 
                 <div class="modal-info">
-                    <div>Fecha: {{ formatDate(selectedPhoto.timestamp) }}</div>
-                    <div>Hora: {{ selectedPhoto.time }}</div>
+                    <div><strong>Nombre:</strong> {{ selectedPhoto.nombre }}</div>
+                    <div><strong>DNI:</strong> {{ selectedPhoto.dni }}</div>
+                    <div><strong>Fecha:</strong> {{ formatDate(selectedPhoto.timestamp) }}</div>
+                    <div><strong>Hora:</strong> {{ formatTime(selectedPhoto.timestamp) }}</div>
                 </div>
             </div>
         </div>
@@ -51,12 +49,13 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { ref, onMounted } from 'vue'
-import { useCameraStore } from '@/stores/camera'
+import { useCameraStore } from '../stores/camera'
 
 const cameraStore = useCameraStore()
-const { recentCroppedPhotos: recentPhotos } = storeToRefs(cameraStore)
+const { recentCroppedPhotos: recentPhotos, photosCount } = storeToRefs(cameraStore)
 
 const selectedPhoto = ref(null)
+const selectedPhotoIndex = ref(null)
 
 // Formatear fecha de manera más legible
 const formatDate = (timestamp) => {
@@ -78,42 +77,25 @@ const formatDate = (timestamp) => {
     }
 }
 
+// Formatear hora
+const formatTime = (timestamp) => {
+    const date = new Date(timestamp)
+    return date.toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
 // Seleccionar foto para vista modal
-const selectPhoto = (photo) => {
+const selectPhoto = (photo, index) => {
     selectedPhoto.value = photo
+    selectedPhotoIndex.value = index
 }
 
 // Cerrar modal
 const closeModal = () => {
     selectedPhoto.value = null
-}
-
-// Descargar foto
-const downloadPhoto = (photo) => {
-    const link = document.createElement('a')
-    link.href = photo.url
-    link.download = `foto-recortada-${photo.id}.jpg`
-    link.click()
-}
-
-// Eliminar foto individual
-const deletePhoto = (photoId) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta foto?')) {
-        cameraStore.removeRecentPhoto(photoId)
-
-        // Si la foto eliminada es la seleccionada en el modal, cerrar modal
-        if (selectedPhoto.value && selectedPhoto.value.id === photoId) {
-            closeModal()
-        }
-    }
-}
-
-// Eliminar todas las fotos
-const clearAllPhotos = () => {
-    if (confirm('¿Estás seguro de que quieres eliminar todas las fotos?')) {
-        cameraStore.clearRecentPhotos()
-        closeModal()
-    }
+    selectedPhotoIndex.value = null
 }
 
 // Cerrar modal con tecla Escape
@@ -139,6 +121,7 @@ onMounted(() => {
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
 }
 
 .recent-header {
@@ -154,6 +137,7 @@ onMounted(() => {
     margin: 0;
     color: #333;
     font-size: 1.4em;
+    font-weight: 600;
 }
 
 .header-actions {
@@ -168,21 +152,7 @@ onMounted(() => {
     border-radius: 20px;
     font-size: 0.9em;
     color: #6c757d;
-}
-
-.clear-all-btn {
-    background: #dc3545;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background 0.2s;
-}
-
-.clear-all-btn:hover {
-    background: #c82333;
+    font-weight: 500;
 }
 
 .empty-state {
@@ -200,11 +170,14 @@ onMounted(() => {
 .empty-state h3 {
     margin: 0 0 8px 0;
     color: #495057;
+    font-size: 1.2em;
+    font-weight: 600;
 }
 
 .empty-state p {
     margin: 0;
     font-size: 0.95em;
+    opacity: 0.8;
 }
 
 .photos-grid {
@@ -246,67 +219,30 @@ onMounted(() => {
     transform: scale(1.05);
 }
 
-.photo-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.photo-card:hover .photo-overlay {
-    opacity: 1;
-}
-
-.action-btn {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
-}
-
-.action-btn:hover {
-    transform: scale(1.1);
-}
-
-.download-btn {
-    background: #28a745;
-    color: white;
-}
-
-.delete-btn {
-    background: #dc3545;
-    color: white;
-}
-
 .photo-info {
     padding: 12px;
     background: #f8f9fa;
 }
 
-.photo-date {
+.photo-name {
     font-weight: 600;
     color: #333;
     font-size: 0.9em;
     margin-bottom: 4px;
+    line-height: 1.2;
 }
 
-.photo-time {
+.photo-dni {
     color: #6c757d;
     font-size: 0.8em;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.photo-date {
+    color: #6c757d;
+    font-size: 0.8em;
+    line-height: 1.2;
 }
 
 /* Modal Styles */
@@ -322,6 +258,17 @@ onMounted(() => {
     align-items: center;
     z-index: 2000;
     padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 .modal-content {
@@ -332,6 +279,19 @@ onMounted(() => {
     max-height: 90vh;
     overflow: auto;
     text-align: center;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 .modal-close {
@@ -347,10 +307,15 @@ onMounted(() => {
     font-size: 24px;
     cursor: pointer;
     z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
 }
 
 .modal-close:hover {
     background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
 }
 
 .modal-image {
@@ -358,50 +323,43 @@ onMounted(() => {
     max-height: 70vh;
     object-fit: contain;
     padding: 40px;
-}
-
-.modal-download-btn {
-    padding: 10px 20px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.modal-delete-btn {
-    padding: 10px 20px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    border-radius: 8px;
 }
 
 .modal-info {
-    padding: 16px;
+    padding: 20px;
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
-    font-size: 0.9em;
-    color: #6c757d;
+    font-size: 0.95em;
+    color: #333;
+    text-align: left;
 }
 
 .modal-info div {
-    margin: 4px 0;
+    margin: 8px 0;
+    padding: 4px 0;
 }
 
-/* Responsive */
+.modal-info strong {
+    color: #495057;
+    font-weight: 600;
+    min-width: 80px;
+    display: inline-block;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+    .recent-photos {
+        padding: 16px;
+        margin: 10px 0;
+        border-radius: 8px;
+    }
+
     .recent-header {
         flex-direction: column;
         gap: 12px;
         align-items: flex-start;
+        margin-bottom: 20px;
     }
 
     .header-actions {
@@ -409,9 +367,13 @@ onMounted(() => {
         justify-content: space-between;
     }
 
+    .recent-header h2 {
+        font-size: 1.2em;
+    }
+
     .photos-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 12px;
+        gap: 15px;
     }
 
     .photo-image-container {
@@ -421,16 +383,130 @@ onMounted(() => {
     .modal-content {
         max-width: 95vw;
         max-height: 95vh;
+        margin: 10px;
     }
 
     .modal-image {
         padding: 20px;
+        max-height: 60vh;
+    }
+
+    .modal-info {
+        padding: 16px;
+        font-size: 0.9em;
+    }
+
+    .empty-state {
+        padding: 40px 20px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
     }
 }
 
 @media (max-width: 480px) {
     .photos-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
+
+    .photo-image-container {
+        height: 120px;
+    }
+
+    .photo-info {
+        padding: 8px;
+    }
+
+    .photo-name,
+    .photo-dni,
+    .photo-date {
+        font-size: 0.75em;
+    }
+
+    .modal-image {
+        padding: 15px;
+        max-height: 50vh;
+    }
+
+    .modal-info {
+        padding: 12px;
+        font-size: 0.85em;
+    }
+
+    .modal-info div {
+        margin: 6px 0;
+    }
+
+    .modal-close {
+        top: 10px;
+        right: 10px;
+        width: 35px;
+        height: 35px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 320px) {
+    .photos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .photo-image-container {
+        height: 160px;
+    }
+}
+
+/* Scrollbar personalizado para el modal */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 0 12px 0;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Mejoras de accesibilidad */
+.photo-card:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.modal-close:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Efectos de carga suaves */
+.photo-image {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.photo-image[src] {
+    animation: none;
+    background: none;
 }
 </style>

@@ -39,9 +39,10 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { storeToRefs } from 'pinia'
-import { useCameraStore } from '@/stores/camera';
-import { PhotoService } from '@/services/photoService';
-import { makeFormData } from '@/abadeer_truco/utilities/FormDataMaker';
+import { useCameraStore } from '../stores/camera';
+import { useAdmisionStore } from '../stores/useAdmisionStore'
+import { PhotoService } from '../services/photoService';
+import { makeFormData } from '../abadeer_truco/utilities/FormDataMaker';
 
 // Importación de componentes de PrimeVue
 import InputText from 'primevue/inputtext';
@@ -53,6 +54,9 @@ const dni = ref("");
 const loading = ref(false);
 const error = ref('');
 const successMessage = ref('');
+
+// Store global
+const store = useAdmisionStore()
 const cameraStore = useCameraStore();
 
 const { capturedPhoto } = storeToRefs(cameraStore)
@@ -86,7 +90,7 @@ async function uploadPhoto() {
     error.value = '';
     successMessage.value = '';
 
-
+    store.setImageTaken(cameraStore.capturedPhoto)
     try {
 
         const formData = makeFormData({
@@ -96,13 +100,18 @@ async function uploadPhoto() {
         });
 
         const response = await PhotoService.uploadPhoto(formData);
+        const response_user_data = await PhotoService.getDataUserApiUna(dni.value);
 
-        // console.log("Respuesta del servidor:", response);
-        // cameraStore.setCroppedPhoto(response.imageUrl);
-        console.log(response.data.imageUrl)
-        cameraStore.setCroppedPhoto(BASE_URL + response.data.imageUrl);
+        const photoDetails = {
+            dni: dni.value,
+            nombre: response_user_data.nombre,
+            imageUrl: BASE_URL + response.data.imageUrl,
+        };
 
-        successMessage.value = response.message;
+        cameraStore.setCroppedPhotoUrl(BASE_URL + response.data.imageUrl);
+        cameraStore.setCroppedPhoto(photoDetails);
+
+        successMessage.value = response.data.message;
         dni.value = "";
 
     } catch (err) {

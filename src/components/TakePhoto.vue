@@ -23,7 +23,7 @@
 
 <script setup>
 import { ref, onUnmounted, onMounted } from 'vue'
-import { useCameraStore } from '@/stores/camera'
+import { useCameraStore } from '../stores/camera'
 
 // Componentes PrimeVue
 import Message from 'primevue/message';
@@ -72,12 +72,12 @@ const startCamera = async () => {
     error.value = null; // Limpiar errores previos
 
     try {
-stream.value = await navigator.mediaDevices.getUserMedia({
-    video: {
-        deviceId: { exact: selectedCamera.value },
-        aspectRatio: 16/9
-    }
-});
+        stream.value = await navigator.mediaDevices.getUserMedia({
+            video: {
+                deviceId: { exact: selectedCamera.value },
+                aspectRatio: 16 / 9
+            }
+        });
 
         videoElement.value.srcObject = stream.value;
         isCameraActive.value = true;
@@ -112,7 +112,7 @@ const getCameras = async () => {
 
     try {
         // Pedir permiso primero para obtener las etiquetas de los dispositivos
-tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        tempStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
 
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cameras = devices.filter(device => device.kind === 'videoinput');
@@ -155,7 +155,7 @@ onUnmounted(stopCamera);
 .camera-preview {
     width: 100%;
     height: 100%;
-    object-fit: cover; 
+    object-fit: cover;
 }
 
 .controls {

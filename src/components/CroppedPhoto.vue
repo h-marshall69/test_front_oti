@@ -17,14 +17,14 @@
 <script setup>
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useCameraStore } from '@/stores/camera'
+import { useCameraStore } from '../stores/camera'
 
 const cameraStore = useCameraStore()
 const { capturedPhoto, croppedPhotoUrl, isLoading, error } = storeToRefs(cameraStore)
 
 const fullImageUrl = computed(() => {
     if (croppedPhotoUrl.value) {
-        console.log(croppedPhotoUrl)
+        // console.log(croppedPhotoUrl)
         return croppedPhotoUrl.value;
     }
     return null;
